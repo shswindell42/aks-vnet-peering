@@ -28,8 +28,13 @@ output "aks_user_node_subnet_cidr" {
 }
 
 output "peered_nat_subnet_cidr" {
-  description = "Small /28 NAT Masquerade subnet CIDR peered to the remote VNet"
+  description = "Small /28 NAT Transit VNet CIDR connected to the Virtual WAN Hub"
   value       = var.nat_subnet_cidr
+}
+
+output "virtual_wan_hub_id" {
+  description = "Azure Virtual WAN Hub Resource ID"
+  value       = azurerm_virtual_hub.vhub.id
 }
 
 output "nat_ilb_private_ip" {

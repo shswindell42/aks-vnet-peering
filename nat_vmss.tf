@@ -186,8 +186,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "nat_vmss" {
   }
 
   depends_on = [
-    azurerm_subnet_nat_gateway_association.masquerade_nat,
-    azurerm_lb_rule.ha_ports
+    azurerm_lb_rule.ha_ports,
   ]
 }
 

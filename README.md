@@ -1,39 +1,55 @@
-# AKS Automatic Custom VNet with Subnet Peering & VMSS IP Masquerade
+# AKS Automatic Custom VNet with Azure Virtual WAN & VMSS IP Masquerade
 
-This repository provisions an **AKS Automatic** cluster inside a custom Virtual Network (`vnet-aks-automatic`) and connects its workloads to a service inside a peered Virtual Network (`vnet-remote-services`) **without peering the `/24` user node subnet** required by AKS Automatic.
+This repository provisions an **AKS Automatic** cluster inside an isolated custom Virtual Network (`vnet-aks-automatic`, `100.64.0.0/16`) and connects its workloads across an **Azure Virtual WAN Hub** (`vhub-central`) to a service inside a remote Virtual Network (`vnet-remote-services`, `10.200.0.0/16`) **without advertising the AKS `/16` or `/24` user node subnet to Virtual WAN**.
 
 ## Architecture Overview
 
 ```
 +-----------------------------------------------------------------------------------+
-| vnet-aks-automatic (Address spaces: 100.64.0.0/16 [Non-peered], 10.100.0.0/28)    |
+| vnet-aks-automatic (Address space: 100.64.0.0/16 [Isolated CGNAT Space])          |
+| (NEVER attached to Virtual WAN Hub - Reusable across multiple AKS clusters)       |
 |                                                                                   |
 |  +----------------------------------------+   +--------------------------------+  |
 |  | snet-aks-user-nodes (100.64.1.0/24)    |   | snet-aks-system (100.64.0.64/26|  |
-|  | (NOT Peered - Reusable CGNAT Space)    |   | snet-aks-api    (100.64.0.0/28)|  |
-|  |                                        |   +--------------------------------+  |
-|  |  [ Test Job Pod ]                      |                                       |
+|  |                                        |   | snet-aks-api    (100.64.0.0/28)|  |
+|  |  [ Test Job Pod ]                      |   +--------------------------------+  |
 |  |         |                              |                                       |
 |  |         | UDR: 10.200.0.0/16           |                                       |
 |  |         | Next-hop: 10.100.0.4 (ILB)   |                                       |
 |  +---------|------------------------------+                                       |
-|            v                                                                      |
++------------|----------------------------------------------------------------------+
+             |
+             | Local VNet Peering (vnet-aks-automatic <-> vnet-nat-transit)
+             v
++-----------------------------------------------------------------------------------+
+| vnet-nat-transit (Address space: 10.100.0.0/28)                                   |
+|                                                                                   |
 |  +-----------------------------------------------------------------------------+  |
-|  | snet-nat-masquerade (10.100.0.0/28)  [ ONLY THIS SUBNET IS PEERED ]         |  |
+|  | snet-nat-masquerade (10.100.0.0/28)                                         |  |
 |  |                                                                             |  |
-|  |  [ Internal Standard LB (HA Ports): 10.100.0.4 ]                            |  |
+|  |  [ Internal Standard LB (HA Ports + Floating IP): 10.100.0.4 ]              |  |
 |  |         |                                                                   |  |
 |  |         v                                                                   |  |
 |  |  [ Linux VMSS (vmss-ip-masquerade) ]                                        |  |
 |  |    - NIC IP Forwarding = enabled                                            |  |
 |  |    - sysctl net.ipv4.ip_forward = 1, send_redirects = 0                     |  |
-|  |    - iptables POSTROUTING MASQUERADE (100.64.0.0/16 -> 10.100.0.x)          |  |
+|  |    - iptables POSTROUTING MASQUERADE (-> 10.100.0.x)                        |  |
 |  +-----------------------------------------------------------------------------+  |
 +-----------------------------------------|-----------------------------------------+
                                           |
-                                          | Azure VNet Subnet Peering
-                                          | (peer_complete_virtual_networks_enabled = false)
-                                          | Only 10.100.0.0/28 <-> 10.200.1.0/24
+                                          | azurerm_virtual_hub_connection
+                                          | (Only 10.100.0.0/28 is advertised to vWAN)
+                                          v
++-----------------------------------------------------------------------------------+
+| Azure Virtual WAN (vwan-enterprise)                                               |
+|  +-----------------------------------------------------------------------------+  |
+|  | Virtual Hub: vhub-central (10.50.0.0/24)                                    |  |
+|  |  - Learned Spoke Routes: 10.100.0.0/28, 10.200.0.0/16                       |  |
+|  |  - Zero knowledge of 100.64.0.0/16!                                         |  |
+|  +-----------------------------------------------------------------------------+  |
++-----------------------------------------|-----------------------------------------+
+                                          |
+                                          | azurerm_virtual_hub_connection
                                           v
 +-----------------------------------------------------------------------------------+
 | vnet-remote-services (Address space: 10.200.0.0/16)                               |
@@ -48,82 +64,30 @@ This repository provisions an **AKS Automatic** cluster inside a custom Virtual 
 +-----------------------------------------------------------------------------------+
 ```
 
-### How It Works
+### Why Use a Dedicated `/28` NAT Transit VNet with Azure Virtual WAN?
 
-1. **Dual Address Space & Non-Peered AKS Subnets**:
-   - `vnet-aks-automatic` is configured with two address spaces:
-     - `100.64.0.0/16` (non-peered CGNAT space) for the AKS API server (`100.64.0.0/28`), system nodes (`100.64.0.64/26`), and the `/24` user node subnet (`100.64.1.0/24`).
-     - `10.100.0.0/28` (a tiny 16-IP routable block) dedicated exclusively to `snet-nat-masquerade`.
-2. **Azure Subnet Peering**:
-   - Both `azurerm_virtual_network_peering` resources set `peer_complete_virtual_networks_enabled = false` and explicitly peer **only** `snet-nat-masquerade` (`10.100.0.0/28`) with `snet-remote-api` (`10.200.1.0/24`).
-   - The remote VNet never learns a route to `100.64.0.0/16`, allowing multiple AKS Automatic clusters to reuse the exact same `100.64.0.0/16` space.
-3. **UDR + Internal Load Balancer + IP Masquerade VMSS**:
-   - A Route Table (`rt-aks-to-remote-vnet`) attached to `snet-aks-user-nodes` and `snet-aks-system` directs traffic for `10.200.0.0/16` to the Internal Standard Load Balancer (`10.100.0.4`).
-   - The VMSS instances (`vmss-ip-masquerade`) have Azure NIC `ip_forwarding_enabled = true`, Linux kernel IP forwarding enabled (`send_redirects = 0` to prevent ICMP redirect loops on a single NIC), and an `iptables` `MASQUERADE` rule rewriting source IPs from `100.64.0.0/16` to the VMSS instance's `10.100.0.x` IP.
+Unlike direct VNet peering, **Azure Virtual WAN (`azurerm_virtual_hub_connection`) does not support Subnet Peering**—attaching a VNet to a Virtual Hub automatically advertises **all** address spaces on that VNet into the Virtual Hub router and rejects any overlapping CIDR blocks across spokes.
 
----
-
-## Prerequisites
-
-1. **Enable Azure Subnet Peering on your Subscription** (one-time registration):
-   ```bash
-   az feature register --namespace Microsoft.Network --name AllowSubnetPeering
-   # Wait until status is "Registered":
-   az feature show --namespace Microsoft.Network --name AllowSubnetPeering --query "properties.state" -o tsv
-   # Propagate the feature registration:
-   az provider register --namespace Microsoft.Network
-   ```
-2. **Tools**:
-   - Terraform `>= 1.5.0` (with `hashicorp/azurerm >= 4.81.0` for `azurerm_kubernetes_automatic_cluster`)
-   - Azure CLI (`az`)
-   - `kubectl` and `kubelogin`
+By placing the IP Masquerade VMSS and Internal Load Balancer inside a dedicated `/28` Transit Spoke VNet (`vnet-nat-transit`, `10.100.0.0/28`):
+1. **`vnet-aks-automatic` (`100.64.0.0/16`) is never connected to Virtual WAN**: Multiple AKS Automatic clusters can all use the exact same `100.64.0.0/16` address space (including the required `/24` user node subnet `100.64.1.0/24`).
+2. **Cross-VNet UDR Next-Hop**: `vnet-aks-automatic` peers locally with `vnet-nat-transit`, and its Route Table (`rt-aks-to-remote-vnet`) points `10.200.0.0/16` to the Internal Load Balancer (`10.100.0.4`) in `vnet-nat-transit`.
+3. **Full Virtual WAN Hub Transit**: Because `vnet-nat-transit` (`10.100.0.0/28`) and `vnet-remote-services` (`10.200.0.0/16`) are both connected to `vhub-central` via `azurerm_virtual_hub_connection`, the Virtual Hub router automatically exchanges routes between `10.100.0.0/28` and `10.200.0.0/16`.
 
 ---
 
 ## Deployment & Verification Steps
 
 ### 1. Provision the Infrastructure
+> **Note**: Provisioning an Azure Virtual WAN Hub (`azurerm_virtual_hub`) typically takes ~15–30 minutes in Azure as the underlying hub router infrastructure is allocated.
 ```bash
 terraform init
 terraform apply
 ```
 
 ### 2. Run the Test Job in AKS Automatic
-Once `terraform apply` completes, authenticate to the cluster and run the Kubernetes test job:
+Once `terraform apply` completes, re-run the Kubernetes test job:
 ```bash
-az aks get-credentials \
-  --resource-group $(terraform output -raw resource_group_name) \
-  --name $(terraform output -raw aks_cluster_name) \
-  --overwrite-existing
-
-kubectl apply -f k8s/test-peered-api-job.yaml
+kubectl replace --force -f k8s/test-peered-api-job.yaml
 kubectl wait --for=condition=complete --timeout=180s job/test-peered-api-connectivity
 kubectl logs job/test-peered-api-connectivity
 ```
-
-### Expected Output from the Test Job
-The pod runs inside the non-peered `100.64.1.0/24` node subnet, reaches `http://10.200.1.10:8080/health` in the peered VNet, and verifies that the API server sees a `10.100.0.x` NAT VMSS IP:
-```text
-==========================================================
-AKS Automatic -> VMSS IP Masquerade -> Peered VNet Test
-==========================================================
-Pod IP (Overlay):        10.244.x.x
-AKS Node IP (Non-peered): 100.64.1.x
-Target Peered API URL:   http://10.200.1.10:8080/health
-----------------------------------------------------------
-Sending HTTP GET request to peered VNet API...
-Response received from Peered VNet API:
-{
-  "status": "ok",
-  "message": "Hello from the peered VNet API!",
-  "client_ip_seen_by_api": "10.100.0.5",
-  "client_port_seen_by_api": 48214,
-  "api_server_hostname": "vm-remote-api",
-  "api_server_ip": "10.200.1.10",
-  "path": "/health",
-  "timestamp": "2026-11-02T19:45:00.000000+00:00"
-}
-----------------------------------------------------------
-SUCCESS: Traffic was masqueraded by the NAT VMSS (10.100.0.x)!
-```
-

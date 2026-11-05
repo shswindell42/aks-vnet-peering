@@ -17,18 +17,11 @@ variable "cluster_name" {
 }
 
 # -----------------------------------------------------------------------------
-# AKS VNet Address Spaces
+# AKS VNet & NAT Transit VNet Address Spaces
 # -----------------------------------------------------------------------------
-# 1. Small routable /28 CIDR dedicated ONLY to the NAT/Masquerade subnet that gets peered
-variable "aks_vnet_peered_cidr" {
-  description = "Small routable CIDR in the AKS VNet dedicated to the peered NAT VMSS subnet"
-  type        = string
-  default     = "10.100.0.0/28"
-}
-
-# 2. Non-peered /16 CGNAT (or private) CIDR for AKS internal subnets (API server, system nodes, /24 user nodes)
+# 1. Non-vWAN /16 CGNAT (or private) CIDR for AKS internal subnets (API server, system nodes, /24 user nodes)
 variable "aks_vnet_internal_cidr" {
-  description = "Non-peered CIDR space for AKS Automatic subnets (can overlap across clusters)"
+  description = "Non-routable CIDR space for AKS Automatic subnets (never advertised to Virtual WAN Hub)"
   type        = string
   default     = "100.64.0.0/16"
 }
@@ -51,16 +44,26 @@ variable "aks_user_node_subnet_cidr" {
   default     = "100.64.1.0/24"
 }
 
+# 2. Small /28 Transit VNet dedicated to the IP Masquerade VMSS (connected to Virtual WAN Hub)
 variable "nat_subnet_cidr" {
-  description = "Subnet CIDR for the IP Masquerade VMSS and Internal Load Balancer (peered with remote VNet)"
+  description = "Address space and subnet CIDR for the NAT Transit VNet (connected to Virtual WAN Hub)"
   type        = string
   default     = "10.100.0.0/28"
 }
 
 variable "nat_lb_private_ip" {
-  description = "Static private IP address for the Internal Load Balancer frontend in the NAT subnet"
+  description = "Static private IP address for the Internal Load Balancer frontend in the NAT Transit VNet"
   type        = string
   default     = "10.100.0.4"
+}
+
+# -----------------------------------------------------------------------------
+# Azure Virtual WAN Hub Address Space
+# -----------------------------------------------------------------------------
+variable "vhub_address_prefix" {
+  description = "Address prefix for the Azure Virtual WAN Hub (/24 minimum recommended by Azure)"
+  type        = string
+  default     = "10.50.0.0/24"
 }
 
 # -----------------------------------------------------------------------------
