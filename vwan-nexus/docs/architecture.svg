@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1220" viewBox="0 0 1500 1220" font-family="Segoe UI, Helvetica, Arial, sans-serif"><defs><marker id="e107C10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#107C10"/></marker><marker id="s107C10" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#107C10"/></marker><marker id="e495057" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#495057"/></marker><marker id="s495057" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#495057"/></marker><marker id="eD13438" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D13438"/></marker><marker id="sD13438" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#D13438"/></marker><marker id="e008575" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#008575"/></marker><marker id="s008575" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#008575"/></marker><marker id="e5C2D91" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5C2D91"/></marker><marker id="s5C2D91" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#5C2D91"/></marker><marker id="e1e1e1e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1e1e1e"/></marker><marker id="s1e1e1e" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#1e1e1e"/></marker><marker id="e0078D4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0078D4"/></marker><marker id="s0078D4" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#0078D4"/></marker><marker id="eF7630C" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#F7630C"/></marker><marker id="sF7630C" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#F7630C"/></marker></defs><rect width="100%" height="100%" fill="#ffffff"/><text x="40" y="42" font-size="24" text-anchor="start" font-weight="bold"><tspan x="40" dy="0">AKS Automatic → Nexus and on-premises over Azure Virtual WAN (least routable IP space)</tspan></text>
+<text x="40" y="67" font-size="13" text-anchor="start"><tspan x="40" dy="0">Per-environment transit /28 is the only thing connected to the hub. AKS VNets reuse 100.64.0.0/16 and are never advertised. Private clusters, all egress forced through the hub. Validated PoC: westus3, Kubernetes 1.36, Azure Linux 3.</tspan></text>
+<rect x="40" y="100" width="330" height="270" rx="10" fill="none" stroke="#0078D4" stroke-width="2.5"/>
+<text x="52" y="122" font-size="14" text-anchor="start" font-weight="bold"><tspan x="52" dy="0">vnet-dev-aks · 100.64.0.0/16</tspan></text>
+<text x="52" y="135" font-size="11" text-anchor="start"><tspan x="52" dy="0">non-routable · reused by every env · never on vWAN</tspan></text>
+<rect x="55" y="150" width="300" height="48" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="205.0" y="171.0" font-size="12" text-anchor="middle"><tspan x="205.0" dy="0">AKS Automatic DEV · private API server</tspan><tspan x="205.0" dy="15.0">CNI Overlay · NAP · outbound: userDefinedRouting</tspan></text>
+<rect x="55.0" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="102.33333333333334" y="229.25" font-size="11" text-anchor="middle"><tspan x="102.33333333333334" dy="0">api</tspan><tspan x="102.33333333333334" dy="13.75">100.64.0.0/28</tspan></text>
+<rect x="157.66666666666669" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="205.00000000000003" y="229.25" font-size="11" text-anchor="middle"><tspan x="205.00000000000003" dy="0">system</tspan><tspan x="205.00000000000003" dy="13.75">100.64.0.64/26</tspan></text>
+<rect x="260.33333333333337" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="307.6666666666667" y="229.25" font-size="11" text-anchor="middle"><tspan x="307.6666666666667" dy="0">user</tspan><tspan x="307.6666666666667" dy="13.75">100.64.1.0/24</tspan></text>
+<rect x="55" y="266" width="300" height="44" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="205.0" y="285.25" font-size="11" text-anchor="middle"><tspan x="205.0" dy="0">UDR on system + user subnets:</tspan><tspan x="205.0" dy="13.75">0.0.0.0/0 → 172.19.0.4 (ILB) · no NAT gateway</tspan></text>
+<rect x="55" y="318" width="300" height="40" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="205.0" y="335.25" font-size="11" text-anchor="middle"><tspan x="205.0" dy="0">outboundType is create-time only on Automatic (azapi)</tspan><tspan x="205.0" dy="13.75">API IP is non-routable: reach it from inside the VNet</tspan></text>
+<line x1="205.0" y1="372" x2="205.0" y2="428" stroke="#0078D4" stroke-width="2" marker-end="url(#e0078D4)"/>
+<text x="213.0" y="392" font-size="12" text-anchor="start"><tspan x="213.0" dy="0">VNet peering</tspan><tspan x="213.0" dy="15.0">(non-transitive)</tspan></text>
+<rect x="40" y="430" width="330" height="150" rx="10" fill="none" stroke="#F7630C" stroke-width="2.5"/>
+<text x="52" y="452" font-size="14" text-anchor="start" font-weight="bold"><tspan x="52" dy="0">vnet-dev-transit · 172.19.0.0/28</tspan></text>
+<text x="52" y="465" font-size="11" text-anchor="start"><tspan x="52" dy="0">routable · the ONLY VNet of this env on the hub</tspan></text>
+<rect x="55" y="478" width="300" height="40" rx="10" fill="#FFF4CE" stroke="#F7630C" stroke-width="1.5"/>
+<text x="205.0" y="495.0" font-size="12" text-anchor="middle"><tspan x="205.0" dy="0">Internal LB 172.19.0.4 · HA ports</tspan><tspan x="205.0" dy="15.0">probe :8080/healthz</tspan></text>
+<rect x="55" y="526" width="300" height="44" rx="10" fill="#FFF4CE" stroke="#F7630C" stroke-width="1.5"/>
+<text x="205.0" y="545.0" font-size="12" text-anchor="middle"><tspan x="205.0" dy="0">Linux VMSS NVA (zonal, accel. net)</tspan><tspan x="205.0" dy="15.0">SNAT all of 100.64.0.0/16 → Nexus, on-prem, 0/0</tspan></text>
+<line x1="205.0" y1="582" x2="205.0" y2="648" stroke="#F7630C" stroke-width="2" marker-end="url(#eF7630C)"/>
+<text x="213.0" y="614" font-size="12" text-anchor="start"><tspan x="213.0" dy="0">hub connection</tspan></text>
+<rect x="400" y="100" width="330" height="270" rx="10" fill="none" stroke="#0078D4" stroke-width="2.5"/>
+<text x="412" y="122" font-size="14" text-anchor="start" font-weight="bold"><tspan x="412" dy="0">vnet-qa-aks · 100.64.0.0/16</tspan></text>
+<text x="412" y="135" font-size="11" text-anchor="start"><tspan x="412" dy="0">non-routable · reused by every env · never on vWAN</tspan></text>
+<rect x="415" y="150" width="300" height="48" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="565.0" y="171.0" font-size="12" text-anchor="middle"><tspan x="565.0" dy="0">AKS Automatic QA · private API server</tspan><tspan x="565.0" dy="15.0">CNI Overlay · NAP · outbound: userDefinedRouting</tspan></text>
+<rect x="415.0" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="462.3333333333333" y="229.25" font-size="11" text-anchor="middle"><tspan x="462.3333333333333" dy="0">api</tspan><tspan x="462.3333333333333" dy="13.75">100.64.0.0/28</tspan></text>
+<rect x="517.6666666666666" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="565.0" y="229.25" font-size="11" text-anchor="middle"><tspan x="565.0" dy="0">system</tspan><tspan x="565.0" dy="13.75">100.64.0.64/26</tspan></text>
+<rect x="620.3333333333334" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="667.6666666666667" y="229.25" font-size="11" text-anchor="middle"><tspan x="667.6666666666667" dy="0">user</tspan><tspan x="667.6666666666667" dy="13.75">100.64.1.0/24</tspan></text>
+<rect x="415" y="266" width="300" height="44" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="565.0" y="285.25" font-size="11" text-anchor="middle"><tspan x="565.0" dy="0">UDR on system + user subnets:</tspan><tspan x="565.0" dy="13.75">0.0.0.0/0 → 172.20.0.4 (ILB) · no NAT gateway</tspan></text>
+<rect x="415" y="318" width="300" height="40" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="565.0" y="335.25" font-size="11" text-anchor="middle"><tspan x="565.0" dy="0">outboundType is create-time only on Automatic (azapi)</tspan><tspan x="565.0" dy="13.75">API IP is non-routable: reach it from inside the VNet</tspan></text>
+<line x1="565.0" y1="372" x2="565.0" y2="428" stroke="#0078D4" stroke-width="2" marker-end="url(#e0078D4)"/>
+<text x="573.0" y="392" font-size="12" text-anchor="start"><tspan x="573.0" dy="0">VNet peering</tspan><tspan x="573.0" dy="15.0">(non-transitive)</tspan></text>
+<rect x="400" y="430" width="330" height="150" rx="10" fill="none" stroke="#F7630C" stroke-width="2.5"/>
+<text x="412" y="452" font-size="14" text-anchor="start" font-weight="bold"><tspan x="412" dy="0">vnet-qa-transit · 172.20.0.0/28</tspan></text>
+<text x="412" y="465" font-size="11" text-anchor="start"><tspan x="412" dy="0">routable · the ONLY VNet of this env on the hub</tspan></text>
+<rect x="415" y="478" width="300" height="40" rx="10" fill="#FFF4CE" stroke="#F7630C" stroke-width="1.5"/>
+<text x="565.0" y="495.0" font-size="12" text-anchor="middle"><tspan x="565.0" dy="0">Internal LB 172.20.0.4 · HA ports</tspan><tspan x="565.0" dy="15.0">probe :8080/healthz</tspan></text>
+<rect x="415" y="526" width="300" height="44" rx="10" fill="#FFF4CE" stroke="#F7630C" stroke-width="1.5"/>
+<text x="565.0" y="545.0" font-size="12" text-anchor="middle"><tspan x="565.0" dy="0">Linux VMSS NVA (zonal, accel. net)</tspan><tspan x="565.0" dy="15.0">SNAT all of 100.64.0.0/16 → Nexus, on-prem, 0/0</tspan></text>
+<line x1="565.0" y1="582" x2="565.0" y2="648" stroke="#F7630C" stroke-width="2" marker-end="url(#eF7630C)"/>
+<text x="573.0" y="614" font-size="12" text-anchor="start"><tspan x="573.0" dy="0">hub connection</tspan></text>
+<rect x="760" y="100" width="330" height="270" rx="10" fill="none" stroke="#0078D4" stroke-width="2.5"/>
+<text x="772" y="122" font-size="14" text-anchor="start" font-weight="bold"><tspan x="772" dy="0">vnet-prod-aks · 100.64.0.0/16</tspan></text>
+<text x="772" y="135" font-size="11" text-anchor="start"><tspan x="772" dy="0">non-routable · reused by every env · never on vWAN</tspan></text>
+<rect x="775" y="150" width="300" height="48" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="925.0" y="171.0" font-size="12" text-anchor="middle"><tspan x="925.0" dy="0">AKS Automatic PROD · private API server</tspan><tspan x="925.0" dy="15.0">CNI Overlay · NAP · outbound: userDefinedRouting</tspan></text>
+<rect x="775.0" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="822.3333333333334" y="229.25" font-size="11" text-anchor="middle"><tspan x="822.3333333333334" dy="0">api</tspan><tspan x="822.3333333333334" dy="13.75">100.64.0.0/28</tspan></text>
+<rect x="877.6666666666666" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="925.0" y="229.25" font-size="11" text-anchor="middle"><tspan x="925.0" dy="0">system</tspan><tspan x="925.0" dy="13.75">100.64.0.64/26</tspan></text>
+<rect x="980.3333333333334" y="210" width="94.66666666666667" height="44" rx="10" fill="#CFE4FA" stroke="#0078D4" stroke-width="1.5"/>
+<text x="1027.6666666666667" y="229.25" font-size="11" text-anchor="middle"><tspan x="1027.6666666666667" dy="0">user</tspan><tspan x="1027.6666666666667" dy="13.75">100.64.1.0/24</tspan></text>
+<rect x="775" y="266" width="300" height="44" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="925.0" y="285.25" font-size="11" text-anchor="middle"><tspan x="925.0" dy="0">UDR on system + user subnets:</tspan><tspan x="925.0" dy="13.75">0.0.0.0/0 → 172.21.0.4 (ILB) · no NAT gateway</tspan></text>
+<rect x="775" y="318" width="300" height="40" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="925.0" y="335.25" font-size="11" text-anchor="middle"><tspan x="925.0" dy="0">outboundType is create-time only on Automatic (azapi)</tspan><tspan x="925.0" dy="13.75">API IP is non-routable: reach it from inside the VNet</tspan></text>
+<line x1="925.0" y1="372" x2="925.0" y2="428" stroke="#0078D4" stroke-width="2" marker-end="url(#e0078D4)"/>
+<text x="933.0" y="392" font-size="12" text-anchor="start"><tspan x="933.0" dy="0">VNet peering</tspan><tspan x="933.0" dy="15.0">(non-transitive)</tspan></text>
+<rect x="760" y="430" width="330" height="150" rx="10" fill="none" stroke="#F7630C" stroke-width="2.5"/>
+<text x="772" y="452" font-size="14" text-anchor="start" font-weight="bold"><tspan x="772" dy="0">vnet-prod-transit · 172.21.0.0/28</tspan></text>
+<text x="772" y="465" font-size="11" text-anchor="start"><tspan x="772" dy="0">routable · the ONLY VNet of this env on the hub</tspan></text>
+<rect x="775" y="478" width="300" height="40" rx="10" fill="#FFF4CE" stroke="#F7630C" stroke-width="1.5"/>
+<text x="925.0" y="495.0" font-size="12" text-anchor="middle"><tspan x="925.0" dy="0">Internal LB 172.21.0.4 · HA ports</tspan><tspan x="925.0" dy="15.0">probe :8080/healthz</tspan></text>
+<rect x="775" y="526" width="300" height="44" rx="10" fill="#FFF4CE" stroke="#F7630C" stroke-width="1.5"/>
+<text x="925.0" y="545.0" font-size="12" text-anchor="middle"><tspan x="925.0" dy="0">Linux VMSS NVA (zonal, accel. net)</tspan><tspan x="925.0" dy="15.0">SNAT all of 100.64.0.0/16 → Nexus, on-prem, 0/0</tspan></text>
+<line x1="925.0" y1="582" x2="925.0" y2="648" stroke="#F7630C" stroke-width="2" marker-end="url(#eF7630C)"/>
+<text x="933.0" y="614" font-size="12" text-anchor="start"><tspan x="933.0" dy="0">hub connection</tspan></text>
+<rect x="40" y="650" width="1020" height="120" rx="10" fill="#E8DAEF" stroke="#5C2D91" stroke-width="1.5"/>
+<text x="52" y="678" font-size="16" text-anchor="start" font-weight="bold"><tspan x="52" dy="0">Azure Virtual WAN hub (PoC 10.250.0.0/23)</tspan></text>
+<text x="52" y="703" font-size="13" text-anchor="start"><tspan x="52" dy="0">Learns ONLY:  172.19.0.0/28 · 172.20.0.0/28 · 172.21.0.0/28 · 10.30.0.0/24 · on-prem prefixes (ER / VPN)</tspan><tspan x="52" dy="16.25">100.64.0.0/16 is never advertised, so the same range can be reused per environment (no overlap on the hub)</tspan><tspan x="52" dy="16.25">Routing intent (Internet) → hub firewall: transit VNets learn 0.0.0.0/0; allow AKS required FQDNs from the transit /28s</tspan></text>
+<rect x="1130" y="430" width="330" height="340" rx="10" fill="none" stroke="#107C10" stroke-width="2.5"/>
+<text x="1142" y="452" font-size="14" text-anchor="start" font-weight="bold"><tspan x="1142" dy="0">Shared services spoke · 10.30.0.0/24</tspan></text>
+<rect x="1145" y="470" width="300" height="76" rx="10" fill="#DFF6DD" stroke="#107C10" stroke-width="1.5"/>
+<text x="1295.0" y="497.5" font-size="12" text-anchor="middle"><tspan x="1295.0" dy="0">Nexus Repository CE · 10.30.0.10</tspan><tspan x="1295.0" dy="15.0">nginx TLS :443 → docker-hosted</tspan><tspan x="1295.0" dy="15.0">cert CN/SAN nexus.poc.internal</tspan></text>
+<rect x="1145" y="556" width="300" height="44" rx="10" fill="#FDE7E9" stroke="#D13438" stroke-width="1.5"/>
+<text x="1295.0" y="575.0" font-size="12" text-anchor="middle"><tspan x="1295.0" dy="0">NSG: allow TCP 443 only from</tspan><tspan x="1295.0" dy="15.0">the transit /28s (proves SNAT)</tspan></text>
+<rect x="1145" y="610" width="300" height="60" rx="10" fill="#DFF6DD" stroke="#107C10" stroke-width="1.5"/>
+<text x="1295.0" y="629.5" font-size="12" text-anchor="middle"><tspan x="1295.0" dy="0">Private DNS zone poc.internal</tspan><tspan x="1295.0" dy="15.0">nexus → 10.30.0.10</tspan><tspan x="1295.0" dy="15.0">linked to each AKS VNet</tspan></text>
+<rect x="1145" y="680" width="300" height="76" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="1295.0" y="707.5" font-size="12" text-anchor="middle"><tspan x="1295.0" dy="0">PoC private root CA (tls provider)</tspan><tspan x="1295.0" dy="15.0">→ Nexus server cert</tspan><tspan x="1295.0" dy="15.0">→ AKS custom CA trust (azapi)</tspan></text>
+<line x1="1062" y1="710" x2="1128" y2="710" stroke="#107C10" stroke-width="2" marker-end="url(#e107C10)" marker-start="url(#s107C10)"/>
+<text x="1072" y="684" font-size="12" text-anchor="start"><tspan x="1072" dy="0">hub</tspan><tspan x="1072" dy="15.0">conn.</tspan></text>
+<rect x="1130" y="100" width="330" height="270" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="1142" y="126" font-size="16" text-anchor="start" font-weight="bold"><tspan x="1142" dy="0">Why it works</tspan></text>
+<text x="1142" y="151" font-size="13" text-anchor="start"><tspan x="1142" dy="0">• Hub connections are whole-VNet:</tspan><tspan x="1142" dy="16.25">  connect only a /28 transit VNet</tspan><tspan x="1142" dy="16.25">• Peering is non-transitive: the AKS</tspan><tspan x="1142" dy="16.25">  range stays private and reusable</tspan><tspan x="1142" dy="16.25">• NVA SNAT: Nexus and on-prem only</tspan><tspan x="1142" dy="16.25">  see 172.x.0.x source addresses</tspan><tspan x="1142" dy="16.25">• Routable footprint: 3 × /28 = 48 IPs</tspan><tspan x="1142" dy="16.25">  (vs ~3 × 336 if AKS were connected)</tspan><tspan x="1142" dy="16.25">• All AKS egress uses the NVA + hub;</tspan><tspan x="1142" dy="16.25">  internet exits only via the hub firewall</tspan><tspan x="1142" dy="16.25">• NVA probe fails if forwarding/SNAT</tspan><tspan x="1142" dy="16.25">  breaks, so the ILB drains that instance</tspan></text>
+<line x1="550" y1="772" x2="550" y2="826" stroke="#5C2D91" stroke-width="2" marker-end="url(#e5C2D91)" marker-start="url(#s5C2D91)"/>
+<text x="558" y="790" font-size="12" text-anchor="start"><tspan x="558" dy="0">branch routes</tspan><tspan x="558" dy="15.0">(default route table)</tspan></text>
+<rect x="40" y="828" width="300" height="92" rx="10" fill="#F3F2F1" stroke="#495057" stroke-width="1.5"/>
+<text x="190.0" y="856.0" font-size="12" text-anchor="middle"><tspan x="190.0" dy="0">On-prem DNS: Azure DNS Private</tspan><tspan x="190.0" dy="15.0">Resolver, outbound endpoint in the</tspan><tspan x="190.0" dy="15.0">shared spoke, forwarding ruleset</tspan><tspan x="190.0" dy="15.0">linked to each AKS VNet</tspan></text>
+<rect x="380" y="828" width="340" height="92" rx="10" fill="#E8DAEF" stroke="#5C2D91" stroke-width="1.5"/>
+<text x="550.0" y="863.5" font-size="12" text-anchor="middle"><tspan x="550.0" dy="0">ExpressRoute gateway (in the hub)</tspan><tspan x="550.0" dy="15.0">advertises the transit /28s + Nexus</tspan><tspan x="550.0" dy="15.0">never 100.64.0.0/16</tspan></text>
+<line x1="722" y1="874" x2="788" y2="874" stroke="#008575" stroke-width="2" marker-end="url(#e008575)" marker-start="url(#s008575)"/>
+<rect x="790" y="828" width="320" height="92" rx="10" fill="#D0F0EC" stroke="#008575" stroke-width="1.5"/>
+<text x="950.0" y="856.0" font-size="12" text-anchor="middle"><tspan x="950.0" dy="0">On-prem data centres (ER Direct,</tspan><tspan x="950.0" dy="15.0">primary + 2 backup circuits)</tspan><tspan x="950.0" dy="15.0">firewalls allow 172.19/20/21.0.0/28</tspan><tspan x="950.0" dy="15.0">= one source range per environment</tspan></text>
+<rect x="1130" y="828" width="330" height="92" rx="10" fill="#FDE7E9" stroke="#D13438" stroke-width="1.5"/>
+<text x="1295.0" y="856.0" font-size="12" text-anchor="middle"><tspan x="1295.0" dy="0">On-prem must NOT advertise 100.64.0.0/16</tspan><tspan x="1295.0" dy="15.0">(a BGP route beats the peering route)</tspan><tspan x="1295.0" dy="15.0">Limit which pods reach on-prem with</tspan><tspan x="1295.0" dy="15.0">egress NetworkPolicy (Cilium)</tspan></text>
+<rect x="40" y="950" width="1420" height="250" rx="10" fill="none" stroke="#495057" stroke-width="2.5"/>
+<text x="52" y="976" font-size="16" text-anchor="start" font-weight="bold"><tspan x="52" dy="0">Image pull path and private-CA trust (validated end to end)</tspan></text>
+<rect x="52" y="992" width="22" height="20" rx="10" fill="#E8DAEF" stroke="#5C2D91" stroke-width="1.5"/>
+<text x="63.0" y="1006.125" font-size="11" text-anchor="middle"><tspan x="63.0" dy="0">1</tspan></text>
+<text x="84" y="1007" font-size="13" text-anchor="start"><tspan x="84" dy="0">kubelet/containerd on node 100.64.1.x resolves nexus.poc.internal (private DNS) → 10.30.0.10</tspan></text>
+<rect x="52" y="1016" width="22" height="20" rx="10" fill="#E8DAEF" stroke="#5C2D91" stroke-width="1.5"/>
+<text x="63.0" y="1030.125" font-size="11" text-anchor="middle"><tspan x="63.0" dy="0">2</tspan></text>
+<text x="84" y="1031" font-size="13" text-anchor="start"><tspan x="84" dy="0">UDR sends 10.30.0.0/24 to the transit ILB 172.19.0.4 (HA ports) → NVA instance</tspan></text>
+<rect x="52" y="1040" width="22" height="20" rx="10" fill="#E8DAEF" stroke="#5C2D91" stroke-width="1.5"/>
+<text x="63.0" y="1054.125" font-size="11" text-anchor="middle"><tspan x="63.0" dy="0">3</tspan></text>
+<text x="84" y="1055" font-size="13" text-anchor="start"><tspan x="84" dy="0">NVA SNATs 100.64.1.x → 172.19.0.x and forwards through the vWAN hub</tspan></text>
+<rect x="52" y="1064" width="22" height="20" rx="10" fill="#E8DAEF" stroke="#5C2D91" stroke-width="1.5"/>
+<text x="63.0" y="1078.125" font-size="11" text-anchor="middle"><tspan x="63.0" dy="0">4</tspan></text>
+<text x="84" y="1079" font-size="13" text-anchor="start"><tspan x="84" dy="0">Nexus NSG admits 443 from the transit /28; nginx presents the cert issued by the private CA</tspan></text>
+<rect x="52" y="1088" width="22" height="20" rx="10" fill="#E8DAEF" stroke="#5C2D91" stroke-width="1.5"/>
+<text x="63.0" y="1102.125" font-size="11" text-anchor="middle"><tspan x="63.0" dy="0">5</tspan></text>
+<text x="84" y="1103" font-size="13" text-anchor="start"><tspan x="84" dy="0">containerd verifies it via AKS custom CA trust (securityProfile.customCATrustCertificates, in the azapi create request)</tspan></text>
+<rect x="1000" y="990" width="445" height="112" rx="10" fill="#FDE7E9" stroke="#D13438" stroke-width="1.5"/>
+<text x="1222.5" y="1020.5" font-size="12" text-anchor="middle"><tspan x="1222.5" dy="0">Gotcha: setting CA trust reimages the hosted system</tspan><tspan x="1222.5" dy="15.0">nodes, but NAP nodes that already exist are NOT</tspan><tspan x="1222.5" dy="15.0">marked drifted and keep failing with x509.</tspan><tspan x="1222.5" dy="15.0">Set it at create time, or recycle NodeClaims</tspan><tspan x="1222.5" dy="15.0">(scripts/e2e-test.sh -x recycle-nodes).</tspan></text>
+<text x="52" y="1132" font-size="12" text-anchor="start"><tspan x="52" dy="0">PoC results (westus3, private clusters): pod pull over TLS 326 MB at 1.4–2.2 Gbps · kubelet pull 342 MB in 12.5–13.2 s · pod internet egress IP = hub firewall public IP · before CA trust: ErrImagePull x509: certificate signed by unknown authority</tspan></text>
+<text x="52" y="1156" font-size="12" text-anchor="start"><tspan x="52" dy="0">On-prem (simulated with S2S VPN + BGP, 10.40.0.0/24): pod → on-prem server seen as client 172.19.0.6 (NVA) · on-prem learned only 172.19.0.0/28, 10.30.0.0/24 and the hub prefix</tspan></text>
+<text x="52" y="1180" font-size="12" text-anchor="start"><tspan x="52" dy="0">Pods that call Nexus themselves must mount the CA (node trust is not injected into containers). Outbound only: on-prem-initiated flows into AKS need a separate design.</tspan></text></svg>

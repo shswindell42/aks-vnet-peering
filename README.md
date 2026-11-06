@@ -2,6 +2,8 @@
 
 This repository provisions an **AKS Automatic** cluster inside a custom Virtual Network (`vnet-aks-automatic`) and connects its workloads to a service inside a peered Virtual Network (`vnet-remote-services`) **without peering the `/24` user node subnet** required by AKS Automatic.
 
+> **Using Azure Virtual WAN?** A vWAN hub connection is whole-VNet only, so subnet peering can't be used toward a hub. See [`vwan-nexus/`](vwan-nexus/README.md) for the vWAN variant: a per-environment transit `/28`, with AKS VNets that reuse non-routable space and reach Nexus through the hub ([diagram](vwan-nexus/docs/architecture.svg)).
+
 ## Architecture Overview
 
 ```

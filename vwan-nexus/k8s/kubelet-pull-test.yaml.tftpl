@@ -1,0 +1,35 @@
+# Kubelet/containerd pull from Nexus over HTTPS (private CA).
+# Expected BEFORE custom CA trust: ErrImagePull "x509: certificate signed by unknown authority".
+# Expected AFTER  `az aks update --custom-ca-trust-certificates ca.crt`: Running/Completed.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubelet-pull-test
+  namespace: default
+  labels:
+    app: kubelet-pull-test
+spec:
+  restartPolicy: Never
+  imagePullSecrets:
+    - name: nexus-pull
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1654
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: seed
+      image: ${image}
+      imagePullPolicy: Always
+      command: ["sh", "-c", "echo pulled-from-nexus-ok; sleep 5"]
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "128Mi"
+        limits:
+          cpu: "500m"
+          memory: "256Mi"
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]

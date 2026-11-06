@@ -1,0 +1,98 @@
+#cloud-config
+write_files:
+  - path: /etc/sysctl.d/99-nva.conf
+    content: |
+      net.ipv4.ip_forward=1
+      net.ipv4.conf.all.send_redirects=0
+      net.ipv4.conf.default.send_redirects=0
+      net.netfilter.nf_conntrack_max=262144
+  - path: /usr/local/sbin/nva-setup.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      modprobe nf_conntrack
+      sysctl --system >/dev/null
+      IF=$(ip route show default | awk '{print $5}' | head -n1)
+      sysctl -w "net.ipv4.conf.$IF.send_redirects=0"
+%{ if snat_all ~}
+      # Private cluster: SNAT ALL AKS node traffic (${internal_cidr}) to this instance's transit IP;
+      # internet-bound flows then follow the hub's default route.
+      iptables -t nat -C POSTROUTING -s ${internal_cidr} -o "$IF" -j MASQUERADE 2>/dev/null || \
+        iptables -t nat -A POSTROUTING -s ${internal_cidr} -o "$IF" -j MASQUERADE
+      iptables -C FORWARD -s ${internal_cidr} -j ACCEPT 2>/dev/null || \
+        iptables -A FORWARD -s ${internal_cidr} -j ACCEPT
+%{ else ~}
+      # SNAT AKS node traffic (${internal_cidr}) to this instance's routable transit IP, only for the private destinations.
+      for DST in ${join(" ", destination_cidrs)}; do
+        iptables -t nat -C POSTROUTING -s ${internal_cidr} -d "$DST" -o "$IF" -j MASQUERADE 2>/dev/null || \
+          iptables -t nat -A POSTROUTING -s ${internal_cidr} -d "$DST" -o "$IF" -j MASQUERADE
+        iptables -C FORWARD -s ${internal_cidr} -d "$DST" -j ACCEPT 2>/dev/null || \
+          iptables -A FORWARD -s ${internal_cidr} -d "$DST" -j ACCEPT
+      done
+%{ endif ~}
+      iptables -C FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || \
+        iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+      iptables -P FORWARD DROP
+  - path: /usr/local/sbin/nva-health.py
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env python3
+      # LB probe target: 200 only if kernel forwarding is on and the SNAT rule is present.
+      import subprocess
+      from http.server import BaseHTTPRequestHandler, HTTPServer
+
+      def healthy():
+          try:
+              with open("/proc/sys/net/ipv4/ip_forward") as f:
+                  if f.read().strip() != "1":
+                      return False
+              out = subprocess.run(["iptables", "-t", "nat", "-S", "POSTROUTING"],
+                                   capture_output=True, text=True, timeout=5).stdout
+              return "MASQUERADE" in out
+          except Exception:
+              return False
+
+      class H(BaseHTTPRequestHandler):
+          def do_GET(self):
+              ok = self.path == "/healthz" and healthy()
+              self.send_response(200 if ok else 503)
+              self.end_headers()
+              self.wfile.write(b"ok\n" if ok else b"unhealthy\n")
+
+          def log_message(self, *a):
+              pass
+
+      HTTPServer(("0.0.0.0", 8080), H).serve_forever()
+  - path: /etc/systemd/system/nva-setup.service
+    content: |
+      [Unit]
+      Description=Configure SNAT NVA forwarding for AKS -> private destinations
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/nva-setup.sh
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+  - path: /etc/systemd/system/nva-health.service
+    content: |
+      [Unit]
+      Description=NVA health endpoint for Azure LB probe
+      After=nva-setup.service
+      Requires=nva-setup.service
+
+      [Service]
+      ExecStart=/usr/bin/python3 /usr/local/sbin/nva-health.py
+      Restart=always
+      RestartSec=2
+
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - systemctl daemon-reload
+  - systemctl enable --now nva-setup.service
+  - systemctl enable --now nva-health.service

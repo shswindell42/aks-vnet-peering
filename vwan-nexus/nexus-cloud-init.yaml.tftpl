@@ -1,0 +1,106 @@
+#cloud-config
+package_update: true
+packages:
+  - docker.io
+  - nginx
+  - curl
+  - python3
+write_files:
+  - path: /etc/nginx/tls/nexus.crt
+    permissions: '0644'
+    content: |
+      ${indent(6, tls_cert)}
+  - path: /etc/nginx/tls/nexus.key
+    permissions: '0600'
+    content: |
+      ${indent(6, tls_key)}
+  - path: /etc/nginx/sites-available/nexus
+    content: |
+      # TLS front end for Nexus. /v2/ -> Docker hosted connector, everything else -> Nexus UI/REST.
+      server {
+        listen 443 ssl;
+        server_name ${fqdn};
+
+        ssl_certificate     /etc/nginx/tls/nexus.crt;
+        ssl_certificate_key /etc/nginx/tls/nexus.key;
+        ssl_protocols       TLSv1.2 TLSv1.3;
+
+        client_max_body_size 0;
+        chunked_transfer_encoding on;
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_read_timeout 900s;
+        proxy_send_timeout 900s;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        location /v2/ {
+          proxy_pass http://127.0.0.1:${docker_port};
+        }
+
+        location / {
+          proxy_pass http://127.0.0.1:8081;
+        }
+      }
+  - path: /usr/local/sbin/nexus-bootstrap.sh
+    permissions: '0700'
+    content: |
+      #!/bin/bash
+      # Starts Nexus Community Edition and creates a Docker hosted repo (PoC only).
+      set -euo pipefail
+      NEW_PW='${admin_password}'
+      BASE=http://127.0.0.1:8081/service/rest
+
+      if ! docker ps -a --format '{{.Names}}' | grep -qx nexus; then
+        docker run -d --restart unless-stopped --name nexus \
+          -p 127.0.0.1:8081:8081 -p 127.0.0.1:${docker_port}:${docker_port} \
+          -v nexus-data:/nexus-data ${image}
+      fi
+
+      until curl -fsS -o /dev/null "$BASE/v1/status/writable"; do sleep 10; done
+
+      if ! curl -fsS -o /dev/null -u "admin:$NEW_PW" "$BASE/v1/security/users"; then
+        INIT_PW=$(docker exec nexus cat /nexus-data/admin.password)
+        curl -fsS -u "admin:$INIT_PW" -X PUT -H 'Content-Type: text/plain' \
+          --data "$NEW_PW" "$BASE/v1/security/users/admin/change-password"
+        docker exec nexus rm -f /nexus-data/admin.password
+      fi
+      AUTH="admin:$NEW_PW"
+
+      # Community Edition requires EULA acceptance before some features work.
+      EULA=$(curl -fsS -u "$AUTH" "$BASE/v1/system/eula" 2>/dev/null || true)
+      if echo "$EULA" | grep -q '"accepted" *: *false'; then
+        echo "$EULA" | python3 -c 'import json,sys; d=json.load(sys.stdin); d["accepted"]=True; print(json.dumps(d))' \
+          | curl -fsS -u "$AUTH" -X POST -H 'Content-Type: application/json' --data @- "$BASE/v1/system/eula"
+      fi
+
+      if ! curl -fsS -o /dev/null -u "$AUTH" "$BASE/v1/repositories/docker/hosted/docker-hosted"; then
+        curl -fsS -u "$AUTH" -X POST -H 'Content-Type: application/json' "$BASE/v1/repositories/docker/hosted" \
+          --data '{"name":"docker-hosted","online":true,"storage":{"blobStoreName":"default","strictContentTypeValidation":true,"writePolicy":"allow"},"docker":{"v1Enabled":false,"forceBasicAuth":true,"httpPort":${docker_port}}}'
+      fi
+      echo "Nexus ready: https://${fqdn}/v2/ -> docker-hosted"
+  - path: /etc/systemd/system/nexus-bootstrap.service
+    content: |
+      [Unit]
+      Description=Start and configure Nexus Community Edition
+      After=docker.service network-online.target
+      Requires=docker.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/nexus-bootstrap.sh
+      RemainAfterExit=yes
+      TimeoutStartSec=1800
+
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - rm -f /etc/nginx/sites-enabled/default
+  - ln -sf /etc/nginx/sites-available/nexus /etc/nginx/sites-enabled/nexus
+  - nginx -t
+  - systemctl restart nginx
+  - systemctl daemon-reload
+  - systemctl enable --now nexus-bootstrap.service

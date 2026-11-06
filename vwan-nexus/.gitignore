@@ -1,0 +1,7 @@
+.kubeconfig-*
+*.tfplan
+ca.crt
+k8s/kubelet-pull-test.yaml
+k8s/nexus-pull-test.yaml
+terraform.tfvars
+*.tfstate.*

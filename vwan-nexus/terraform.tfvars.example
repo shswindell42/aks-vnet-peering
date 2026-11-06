@@ -1,0 +1,27 @@
+# Example: all three environments on the existing PROD vWAN hub.
+# Every AKS VNet reuses 100.64.0.0/16 because only the transit /28s are connected to the hub.
+
+# existing_virtual_hub_id = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualHubs/<hub>"
+
+# create_nexus_standin = false
+# nexus_cidr           = "<prefix of the AKS Shared Infra VNet or Nexus ILB subnet>"
+# nexus_ip             = "<Nexus internal LB IP>"
+
+# On-prem summaries learned by the hub over ExpressRoute. AKS reaches them through the same
+# transit NVA (UDR + SNAT). Keep the list short and outside the AKS VNet/pod/service CIDRs.
+# onprem_cidrs = ["<on-prem summary 1>", "<on-prem summary 2>"]
+
+environments = {
+  dev = {
+    transit_cidr  = "172.19.0.0/28"
+    internal_cidr = "100.64.0.0/16"
+  }
+  qa = {
+    transit_cidr  = "172.20.0.0/28"
+    internal_cidr = "100.64.0.0/16"
+  }
+  prod = {
+    transit_cidr  = "172.21.0.0/28"
+    internal_cidr = "100.64.0.0/16"
+  }
+}

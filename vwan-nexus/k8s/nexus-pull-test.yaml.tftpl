@@ -1,0 +1,97 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nexus-pull-test
+  namespace: default
+  labels:
+    app: nexus-pull-test
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: nexus-pull-test
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: crane
+          image: gcr.io/go-containerregistry/crane:debug
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+              ephemeral-storage: "6Gi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+              ephemeral-storage: "8Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: HOME
+              value: /work
+            # Go honors SSL_CERT_FILE: the pod trusts ONLY the private CA, so TLS to Nexus is fully verified.
+            - name: SSL_CERT_FILE
+              value: /etc/nexus-ca/ca.crt
+            - name: REGISTRY
+              value: "${nexus_registry}"
+            - name: SEED_IMAGE
+              value: "${seed_image}"
+            - name: NEXUS_USER
+              value: admin
+            - name: NEXUS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-cred
+                  key: password
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          command: ["/busybox/sh", "-c"]
+          args:
+            - |
+              set -e
+              echo "== AKS Automatic -> transit NVA (SNAT) -> vWAN hub -> Nexus =="
+              echo "Node IP (non-routable): $${NODE_IP}"
+              echo "Nexus registry:         $${REGISTRY}"
+
+              crane auth login "$${REGISTRY}" -u "$${NEXUS_USER}" -p "$${NEXUS_PASSWORD}"
+              echo "-- Registry API reachable (catalog):"
+              crane catalog "$${REGISTRY}"
+
+              echo "-- Seeding $${SEED_IMAGE} into Nexus (pull from MCR, push via vWAN path)"
+              SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt crane pull --platform linux/amd64 --format tarball "$${SEED_IMAGE}" /work/src.tar
+              crane push /work/src.tar "$${REGISTRY}/poc/seed:1"
+              rm -f /work/src.tar
+
+              echo "-- Pulling back from Nexus through the vWAN path"
+              # /proc/uptime gives 10 ms resolution (busybox date has only seconds).
+              START=$(cut -d' ' -f1 /proc/uptime)
+              crane pull --format tarball "$${REGISTRY}/poc/seed:1" /work/seed.tar
+              END=$(cut -d' ' -f1 /proc/uptime)
+              BYTES=$(wc -c < /work/seed.tar)
+              awk -v b="$${BYTES}" -v s0="$${START}" -v s1="$${END}" 'BEGIN { s = s1 - s0; if (s < 0.01) s = 0.01; printf "Pulled %.1f MB in %.2f s = %.1f MB/s (%.2f Gbps)\n", b/1048576, s, b/1048576/s, b*8/s/1e9 }'
+              echo "SUCCESS: Nexus reachable from AKS through the transit NVA and vWAN hub."
+          volumeMounts:
+            - name: work
+              mountPath: /work
+            - name: nexus-ca
+              mountPath: /etc/nexus-ca
+              readOnly: true
+      volumes:
+        - name: work
+          emptyDir:
+            sizeLimit: 8Gi
+        - name: nexus-ca
+          configMap:
+            name: nexus-ca
